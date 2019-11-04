@@ -1679,18 +1679,18 @@ fn test_t_derivation() {
 
     // Test the addresses against https://iancoleman.io/bip39/
     let (taddr, pk) = &wallet.get_t_secret_keys()[0];
-    assert_eq!(taddr, "t1eQ63fwkQ4n4Eo5uCrPGaAV8FWB2tmx7ui");
-    assert_eq!(pk, "Kz9ybX4giKag4NtnP1pi8WQF2B2hZDkFU85S7Dciz3UUhM59AnhE");
+    assert_eq!(taddr, "s1P8qwDeqQ2wiD8UyKPNkDvJCTnvs4YC5nd");
+    assert_eq!(pk, "L3S6KirTiWh4E5GAouNuyrUsmtHcwdT5Weu3D3gk5dpZNFF4fTuq");
 
     // Test a couple more
     wallet.add_taddr();
     let (taddr, pk) = &wallet.get_t_secret_keys()[1];
-    assert_eq!(taddr, "t1NoS6ZgaUTpmjkge2cVpXGcySasdYDrXqh");
-    assert_eq!(pk, "KxdmS38pxskS6bbKX43zhTu8ppWckNmWjKsQFX1hwidvhRRgRd3c");
+    assert_eq!(taddr, "s1WCyxN9TawCuXUKaYEsSjZxk4Z1oy186Se");
+    assert_eq!(pk, "Kyo8UZCJe4L7PUSMjSzFrYymeZrKqYzEmcVZkAvQD3ZjcsZQNiQq");
 
     let (zaddr, sk) = &wallet.get_z_private_keys()[0];
-    assert_eq!(zaddr, "zs1q6xk3q783t5k92kjqt2rkuuww8pdw2euzy5rk6jytw97enx8fhpazdv3th4xe7vsk6e9sfpawfg");
-    assert_eq!(sk, "secret-extended-key-main1qvpa0qr8qqqqpqxn4l054nzxpxzp3a8r2djc7sekdek5upce8mc2j2z0arzps4zv940qeg706hd0wq6g5snzvhp332y6vhwyukdn8dhekmmsk7fzvzkqm6ypc99uy63tpesqwxhpre78v06cx8k5xpp9mrhtgqs5dvp68cqx2yrvthflmm2ynl8c0506dekul0f6jkcdmh0292lpphrksyc5z3pxwws97zd5els3l2mjt2s7hntap27mlmt6w0drtfmz36vz8pgu7ec0twfrq");
+    assert_eq!(zaddr, "ys1qxxggphflwgtj9u0jp7d7vl4rlulrqus3mcmt04jewe7jyu2gvjw0ulu566s89muv5ydgct9mkf");
+    assert_eq!(sk, "secret-extended-key-main1q0s95lnpqqqqpqprun5juwk7l7yx20d59vzvqs0rr2lzw2damfk7z535ly05wau55cecp27rpnx6n9zzz4vw3jg39xl6vkx3l4fad7fq8ngas8r63u9sxk7aummma0day07sy6n5sy445674f3vc9c8uf60vs9fzs3dmqfgd3gvex4f9yht8pngl78292geelw0r95hea436xj7wpx9mzl4jfcl3924urex2fjdjjpy6737s6tgftytj05l06mjc4phlzje7znxy2vsp3r398");
 
     assert_eq!(seed_phrase, Some(wallet.get_seed_phrase()));
 }
