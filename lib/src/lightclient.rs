@@ -27,9 +27,9 @@ use crate::ANCHOR_OFFSET;
 
 mod checkpoints;
 
-pub const DEFAULT_SERVER: &str = "https://lightd-main.zecwallet.co:443";
-pub const WALLET_NAME: &str    = "zecwallet-light-wallet.dat";
-pub const LOGFILE_NAME: &str   = "zecwallet-light-wallet.debug.log";
+pub const DEFAULT_SERVER: &str = "https://lightwalletd.ycash.xyz:443";
+pub const WALLET_NAME: &str    = "yecwallet-light-wallet.dat";
+pub const LOGFILE_NAME: &str   = "yecwallet-light-wallet.debug.log";
 
 #[derive(Clone, Debug)]
 pub struct WalletStatus {
@@ -100,10 +100,10 @@ impl LightClientConfig {
         } else {
             if cfg!(target_os="macos") || cfg!(target_os="windows") {
                 zcash_data_location = dirs::data_dir().expect("Couldn't determine app data directory!");
-                zcash_data_location.push("Zcash");
+                zcash_data_location.push("Ycash");
             } else {
                 zcash_data_location = dirs::home_dir().expect("Couldn't determine home directory!");
-                zcash_data_location.push(".zcash");
+                zcash_data_location.push(".ycash");
             };
 
             match &self.chain_name[..] {
