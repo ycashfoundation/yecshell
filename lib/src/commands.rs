@@ -679,28 +679,6 @@ impl Command for NotesCommand {
     }
 }
 
-struct FixBip39BugCommand {}
-impl Command for FixBip39BugCommand {
-    fn help(&self)  -> String {
-        let mut h = vec![];
-        h.push("Detect if the wallet has the Bip39 derivation bug, and fix it automatically");
-        h.push("Usage:");
-        h.push("fixbip39bug");
-        h.push("");
-
-        h.join("\n")
-    }
-
-    fn short_help(&self) -> String {
-        "Detect if the wallet has the Bip39 derivation bug, and fix it automatically".to_string()
-    }
-
-    fn exec(&self, _args: &[&str], lightclient: &LightClient) -> String {
-        use crate::lightwallet::bugs::BugBip39Derivation;
-
-        BugBip39Derivation::fix_bug(lightclient)
-    }
-}
 
 struct QuitCommand {}
 impl Command for QuitCommand {
@@ -749,7 +727,6 @@ pub fn get_commands() -> Box<HashMap<String, Box<dyn Command>>> {
     map.insert("decrypt".to_string(),       Box::new(DecryptCommand{}));
     map.insert("unlock".to_string(),        Box::new(UnlockCommand{}));
     map.insert("lock".to_string(),          Box::new(LockCommand{}));
-    map.insert("fixbip39bug".to_string(),   Box::new(FixBip39BugCommand{}));
 
     Box::new(map)
 }
