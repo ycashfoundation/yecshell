@@ -79,15 +79,17 @@ pub mod tests {
 
     #[test]
     fn test_checkpoints() {
-        assert_eq!(get_test_checkpoint(500000), None);
-        assert_eq!(get_test_checkpoint(600000).unwrap().0, 600000);
-        assert_eq!(get_test_checkpoint(625000).unwrap().0, 600000);
-        assert_eq!(get_test_checkpoint(650000).unwrap().0, 650000);
-        assert_eq!(get_test_checkpoint(655000).unwrap().0, 650000);
+        assert_eq!(get_test_checkpoint(300000), None);
+        assert_eq!(get_test_checkpoint(500000).unwrap().0, 350000);
+        assert_eq!(get_test_checkpoint(525000).unwrap().0, 350000);
+        assert_eq!(get_test_checkpoint(550000).unwrap().0, 550000);
+        assert_eq!(get_test_checkpoint(655000).unwrap().0, 550000);
 
         assert_eq!(get_main_checkpoint(500000), None);
-        assert_eq!(get_main_checkpoint(610000).unwrap().0, 610000);
-        assert_eq!(get_main_checkpoint(625000).unwrap().0, 610000);
+        assert_eq!(get_main_checkpoint(600000).unwrap().0, 600000);
+        assert_eq!(get_main_checkpoint(625000).unwrap().0, 600000);
+        assert_eq!(get_main_checkpoint(630000).unwrap().0, 630000);
+        assert_eq!(get_main_checkpoint(635000).unwrap().0, 630000);
     }
 
 }
