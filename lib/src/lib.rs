@@ -11,7 +11,7 @@ pub mod commands;
 #[folder = "zcash-params/"]
 pub struct SaplingParams;
 
-pub const ANCHOR_OFFSET: u32 = 4;
+pub const ANCHOR_OFFSET: u32 = 1;
 
 
 pub mod grpc_client {

@@ -159,7 +159,7 @@ struct BalanceCommand {}
 impl Command for BalanceCommand {
     fn help(&self) -> String {
         let mut h = vec![];
-        h.push("Show the current ZEC balance in the wallet");
+        h.push("Show the current YEC balance in the wallet");
         h.push("Usage:");
         h.push("balance");
         h.push("");
@@ -169,7 +169,7 @@ impl Command for BalanceCommand {
     }
 
     fn short_help(&self) -> String {
-        "Show the current ZEC balance in the wallet".to_string()
+        "Show the current YEC balance in the wallet".to_string()
     }
 
     fn exec(&self, _args: &[&str], lightclient: &LightClient) -> String {
@@ -214,7 +214,7 @@ impl Command for ExportCommand {
         h.push("If no address is passed, private key for all addresses in the wallet are exported.");
         h.push("");
         h.push("Example:");
-        h.push("export ztestsapling1x65nq4dgp0qfywgxcwk9n0fvm4fysmapgr2q00p85ju252h6l7mmxu2jg9cqqhtvzd69jwhgv8d");
+        h.push("export ytestsapling1x65nq4dgp0qfywgxcwk9n0fvm4fysmapgr2q00p85ju252h6l7mmxu2jg9cqqhtvzd69jwhgv8d");
 
         h.join("\n")
     }
@@ -411,21 +411,21 @@ struct SendCommand {}
 impl Command for SendCommand {
     fn help(&self) -> String {
         let mut h = vec![];
-        h.push("Send ZEC to a given address");
+        h.push("Send YEC to a given address");
         h.push("Usage:");
         h.push("send <address> <amount in zatoshis> \"optional_memo\"");
         h.push("OR");
         h.push("send '[{'address': <address>, 'amount': <amount in zatoshis>, 'memo': <optional memo>}, ...]'");
         h.push("");
         h.push("Example:");
-        h.push("send ztestsapling1x65nq4dgp0qfywgxcwk9n0fvm4fysmapgr2q00p85ju252h6l7mmxu2jg9cqqhtvzd69jwhgv8d 200000 \"Hello from the command line\"");
+        h.push("send ytestsapling1x65nq4dgp0qfywgxcwk9n0fvm4fysmapgr2q00p85ju252h6l7mmxu2jg9cqqhtvzd69jwhgv8d 200000 \"Hello from the command line\"");
         h.push("");
 
         h.join("\n")
     }
 
     fn short_help(&self) -> String {
-        "Send ZEC to the given address".to_string()
+        "Send YEC to the given address".to_string()
     }
 
     fn exec(&self, args: &[&str], lightclient: &LightClient) -> String {
