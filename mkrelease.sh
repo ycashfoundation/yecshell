@@ -43,7 +43,7 @@ mkdir -p target/macOS-yecwallet-cli-v$APP_VERSION
 cp target/release/yecwallet-cli target/macOS-yecwallet-cli-v$APP_VERSION/
 
 # For Windows and Linux, build via docker
-docker run --rm -v $(pwd)/:/opt/zecwallet-light-cli rustbuild:latest bash -c "cd /opt/zecwallet-light-cli && cargo build --release && cargo build --release --target armv7-unknown-linux-gnueabihf && cargo build --release --target aarch64-unknown-linux-gnu && SODIUM_LIB_DIR='/opt/libsodium-win64/lib/' cargo build --release --target x86_64-pc-windows-gnu"
+docker run --rm -v $(pwd)/:/opt/yecwallet-light-cli rustbuild:latest bash -c "cd /opt/yecwallet-light-cli && cargo build --release && cargo build --release --target armv7-unknown-linux-gnueabihf && cargo build --release --target aarch64-unknown-linux-gnu && SODIUM_LIB_DIR='/opt/libsodium-win64/lib/' cargo build --release --target x86_64-pc-windows-gnu"
 
 # Now sign and zip the binaries
 # macOS
