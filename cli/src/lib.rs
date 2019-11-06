@@ -27,7 +27,7 @@ macro_rules! configure_clapapp {
                 .help("Disable server TLS certificate verification. Use this if you're running a local lightwalletd with a self-signed certificate. WARNING: This is dangerous, don't use it with a server that is not your own.")
                 .takes_value(false))
             .arg(Arg::with_name("nosync")
-                .help("By default, zecwallet-cli will sync the wallet at startup. Pass --nosync to prevent the automatic sync at startup.")
+                .help("By default, yecwallet-cli will sync the wallet at startup. Pass --nosync to prevent the automatic sync at startup.")
                 .long("nosync")
                 .short("n")
                 .takes_value(false))
@@ -53,7 +53,7 @@ macro_rules! configure_clapapp {
                 .takes_value(true)
                 .default_value(lightclient::DEFAULT_SERVER))
             .arg(Arg::with_name("COMMAND")
-                .help("Command to execute. If a command is not specified, zecwallet-cli will start in interactive mode.")
+                .help("Command to execute. If a command is not specified, yecwallet-cli will start in interactive mode.")
                 .required(false)
                 .index(1))
             .arg(Arg::with_name("PARAMS")
@@ -75,11 +75,11 @@ pub fn report_permission_error() {
     eprintln!("HOME: {}", home);
     eprintln!("Executable: {}", current_executable.display());
     if home == "/" {
-        eprintln!("User {} must have permission to write to '{}.zcash/' .",
+        eprintln!("User {} must have permission to write to '{}.ycash/' .",
                   user,
                   home);
     } else {
-        eprintln!("User {} must have permission to write to '{}/.zcash/' .",
+        eprintln!("User {} must have permission to write to '{}/.ycash/' .",
                   user,
                   home);
     }
@@ -89,7 +89,7 @@ pub fn report_permission_error() {
 pub fn get_log_config(config: &LightClientConfig) -> io::Result<Config> {
     let window_size = 3; // log0, log1, log2
     let fixed_window_roller =
-        FixedWindowRoller::builder().build("zecwallet-light-wallet-log{}",window_size).unwrap();
+        FixedWindowRoller::builder().build("yecwallet-light-wallet-log{}",window_size).unwrap();
     let size_limit = 5 * 1024 * 1024; // 5MB as max log file size to roll
     let size_trigger = SizeTrigger::new(size_limit);
     let compound_policy = CompoundPolicy::new(Box::new(size_trigger),Box::new(fixed_window_roller));
@@ -141,7 +141,7 @@ pub fn startup(server: http::Uri, dangerous: bool, seed: Option<String>, birthda
 
     // Print startup Messages
     info!(""); // Blank line
-    info!("Starting Zecwallet-CLI");
+    info!("Starting Yecwallet-CLI");
     info!("Light Client config {:?}", config);
 
     if print_updates {

@@ -1,6 +1,6 @@
 [package]
-name = "zecwallet-cli"
-version = "1.1.0"
+name = "yecwallet-cli"
+version = "1.0.0"
 edition = "2018"
 
 [dependencies]

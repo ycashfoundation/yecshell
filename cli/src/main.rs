@@ -1,5 +1,5 @@
 use zecwalletlitelib::lightclient::{self, LightClientConfig};
-use zecwallet_cli::{configure_clapapp,
+use yecwallet_cli::{configure_clapapp,
                     report_permission_error,
                     startup,
                     start_interactive,
@@ -9,7 +9,7 @@ use log::error;
 pub fn main() {
     // Get command line arguments
     use clap::{App, Arg};
-    let fresh_app = App::new("Zecwallet CLI");
+    let fresh_app = App::new("Yecwallet CLI");
     let configured_app = configure_clapapp!(fresh_app);
     let matches = configured_app.get_matches();
     if matches.is_present("recover") {

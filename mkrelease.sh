@@ -38,71 +38,71 @@ cd ..
 cargo build --release 
 
 #macOS
-rm -rf target/macOS-zecwallet-cli-v$APP_VERSION
-mkdir -p target/macOS-zecwallet-cli-v$APP_VERSION
-cp target/release/zecwallet-cli target/macOS-zecwallet-cli-v$APP_VERSION/
+rm -rf target/macOS-yecwallet-cli-v$APP_VERSION
+mkdir -p target/macOS-yecwallet-cli-v$APP_VERSION
+cp target/release/yecwallet-cli target/macOS-yecwallet-cli-v$APP_VERSION/
 
 # For Windows and Linux, build via docker
 docker run --rm -v $(pwd)/:/opt/zecwallet-light-cli rustbuild:latest bash -c "cd /opt/zecwallet-light-cli && cargo build --release && cargo build --release --target armv7-unknown-linux-gnueabihf && cargo build --release --target aarch64-unknown-linux-gnu && SODIUM_LIB_DIR='/opt/libsodium-win64/lib/' cargo build --release --target x86_64-pc-windows-gnu"
 
 # Now sign and zip the binaries
 # macOS
-gpg --batch --output target/macOS-zecwallet-cli-v$APP_VERSION/zecwallet-cli.sig --detach-sig target/macOS-zecwallet-cli-v$APP_VERSION/zecwallet-cli 
+gpg --batch --output target/macOS-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/macOS-yecwallet-cli-v$APP_VERSION/yecwallet-cli 
 cd target
-cd macOS-zecwallet-cli-v$APP_VERSION
-gsha256sum zecwallet-cli > sha256sum.txt
+cd macOS-yecwallet-cli-v$APP_VERSION
+gsha256sum yecwallet-cli > sha256sum.txt
 cd ..
-zip -r macOS-zecwallet-cli-v$APP_VERSION.zip macOS-zecwallet-cli-v$APP_VERSION 
+zip -r macOS-yecwallet-cli-v$APP_VERSION.zip macOS-yecwallet-cli-v$APP_VERSION 
 cd ..
 
 
 #Linux
-rm -rf target/linux-zecwallet-cli-v$APP_VERSION
-mkdir -p target/linux-zecwallet-cli-v$APP_VERSION
-cp target/release/zecwallet-cli target/linux-zecwallet-cli-v$APP_VERSION/
-gpg --batch --output target/linux-zecwallet-cli-v$APP_VERSION/zecwallet-cli.sig --detach-sig target/linux-zecwallet-cli-v$APP_VERSION/zecwallet-cli
+rm -rf target/linux-yecwallet-cli-v$APP_VERSION
+mkdir -p target/linux-yecwallet-cli-v$APP_VERSION
+cp target/release/yecwallet-cli target/linux-yecwallet-cli-v$APP_VERSION/
+gpg --batch --output target/linux-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/linux-yecwallet-cli-v$APP_VERSION/yecwallet-cli
 cd target
-cd linux-zecwallet-cli-v$APP_VERSION
-gsha256sum zecwallet-cli > sha256sum.txt
+cd linux-yecwallet-cli-v$APP_VERSION
+gsha256sum yecwallet-cli > sha256sum.txt
 cd ..
-zip -r linux-zecwallet-cli-v$APP_VERSION.zip linux-zecwallet-cli-v$APP_VERSION 
+zip -r linux-yecwallet-cli-v$APP_VERSION.zip linux-yecwallet-cli-v$APP_VERSION 
 cd ..
 
 
 #Windows
-rm -rf target/Windows-zecwallet-cli-v$APP_VERSION
-mkdir -p target/Windows-zecwallet-cli-v$APP_VERSION
-cp target/x86_64-pc-windows-gnu/release/zecwallet-cli.exe target/Windows-zecwallet-cli-v$APP_VERSION/
-gpg --batch --output target/Windows-zecwallet-cli-v$APP_VERSION/zecwallet-cli.sig --detach-sig target/Windows-zecwallet-cli-v$APP_VERSION/zecwallet-cli.exe
+rm -rf target/Windows-yecwallet-cli-v$APP_VERSION
+mkdir -p target/Windows-yecwallet-cli-v$APP_VERSION
+cp target/x86_64-pc-windows-gnu/release/yecwallet-cli.exe target/Windows-yecwallet-cli-v$APP_VERSION/
+gpg --batch --output target/Windows-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/Windows-yecwallet-cli-v$APP_VERSION/yecwallet-cli.exe
 cd target
-cd Windows-zecwallet-cli-v$APP_VERSION
-gsha256sum zecwallet-cli.exe > sha256sum.txt
+cd Windows-yecwallet-cli-v$APP_VERSION
+gsha256sum yecwallet-cli.exe > sha256sum.txt
 cd ..
-zip -r Windows-zecwallet-cli-v$APP_VERSION.zip Windows-zecwallet-cli-v$APP_VERSION 
+zip -r Windows-yecwallet-cli-v$APP_VERSION.zip Windows-yecwallet-cli-v$APP_VERSION 
 cd ..
 
 
 #Armv7
-rm -rf target/Armv7-zecwallet-cli-v$APP_VERSION
-mkdir -p target/Armv7-zecwallet-cli-v$APP_VERSION
-cp target/armv7-unknown-linux-gnueabihf/release/zecwallet-cli target/Armv7-zecwallet-cli-v$APP_VERSION/
-gpg --batch --output target/Armv7-zecwallet-cli-v$APP_VERSION/zecwallet-cli.sig --detach-sig target/Armv7-zecwallet-cli-v$APP_VERSION/zecwallet-cli
+rm -rf target/Armv7-yecwallet-cli-v$APP_VERSION
+mkdir -p target/Armv7-yecwallet-cli-v$APP_VERSION
+cp target/armv7-unknown-linux-gnueabihf/release/yecwallet-cli target/Armv7-yecwallet-cli-v$APP_VERSION/
+gpg --batch --output target/Armv7-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/Armv7-yecwallet-cli-v$APP_VERSION/yecwallet-cli
 cd target
-cd Armv7-zecwallet-cli-v$APP_VERSION
-gsha256sum zecwallet-cli > sha256sum.txt
+cd Armv7-yecwallet-cli-v$APP_VERSION
+gsha256sum yecwallet-cli > sha256sum.txt
 cd ..
-zip -r Armv7-zecwallet-cli-v$APP_VERSION.zip Armv7-zecwallet-cli-v$APP_VERSION 
+zip -r Armv7-yecwallet-cli-v$APP_VERSION.zip Armv7-yecwallet-cli-v$APP_VERSION 
 cd ..
 
 
 #AARCH64
-rm -rf target/aarch64-zecwallet-cli-v$APP_VERSION
-mkdir -p target/aarch64-zecwallet-cli-v$APP_VERSION
-cp target/aarch64-unknown-linux-gnu/release/zecwallet-cli target/aarch64-zecwallet-cli-v$APP_VERSION/
-gpg --batch --output target/aarch64-zecwallet-cli-v$APP_VERSION/zecwallet-cli.sig --detach-sig target/aarch64-zecwallet-cli-v$APP_VERSION/zecwallet-cli
+rm -rf target/aarch64-yecwallet-cli-v$APP_VERSION
+mkdir -p target/aarch64-yecwallet-cli-v$APP_VERSION
+cp target/aarch64-unknown-linux-gnu/release/yecwallet-cli target/aarch64-yecwallet-cli-v$APP_VERSION/
+gpg --batch --output target/aarch64-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/aarch64-yecwallet-cli-v$APP_VERSION/yecwallet-cli
 cd target
-cd aarch64-zecwallet-cli-v$APP_VERSION
-gsha256sum zecwallet-cli > sha256sum.txt
+cd aarch64-yecwallet-cli-v$APP_VERSION
+gsha256sum yecwallet-cli > sha256sum.txt
 cd ..
-zip -r aarch64-zecwallet-cli-v$APP_VERSION.zip aarch64-zecwallet-cli-v$APP_VERSION 
+zip -r aarch64-yecwallet-cli-v$APP_VERSION.zip aarch64-yecwallet-cli-v$APP_VERSION 
 cd ..
