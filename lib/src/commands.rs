@@ -2,6 +2,7 @@ use std::collections::HashMap;
 use json::{object};
 
 use crate::lightclient::LightClient;
+use crate::lightwallet::LightWallet;
 
 pub trait Command {
     fn help(&self) -> String;
@@ -35,6 +36,26 @@ impl Command for SyncCommand {
     }
 }
 
+struct EncryptionStatusCommand {}
+impl Command for EncryptionStatusCommand {
+    fn help(&self) -> String {
+        let mut h = vec![];
+        h.push("Check if the wallet is encrypted and if it is locked");
+        h.push("Usage:");
+        h.push("encryptionstatus");
+        h.push("");
+
+        h.join("\n")
+    }
+
+    fn short_help(&self) -> String {
+        "Check if the wallet is encrypted and if it is locked".to_string()
+    }
+
+    fn exec(&self, _args: &[&str], lightclient: &LightClient) -> String {
+        lightclient.do_encryption_status().pretty(2)
+    }
+}
 
 struct SyncStatusCommand {}
 impl Command for SyncStatusCommand {
@@ -467,6 +488,8 @@ impl Command for SendCommand {
                 Err(s) => { return format!("Error: {}\n{}", s, self.help()); }
             }
         } else if args.len() == 2 || args.len() == 3 {
+            let address = args[0].to_string();
+
             // Make sure we can parse the amount
             let value = match args[1].parse::<u64>() {
                 Ok(amt) => amt,
@@ -475,7 +498,12 @@ impl Command for SendCommand {
                 }
             };
 
-            let memo = if args.len() == 3 { Some(args[2].to_string()) } else {None};
+            let memo = if args.len() == 3 { Some(args[2].to_string()) } else { None };
+
+            // Memo has to be None if not sending to a shileded address
+            if memo.is_some() && !LightWallet::is_shielded_address(&address, &lightclient.config) {
+                return format!("Can't send a memo to the non-shielded address {}", address);
+            }
             
             vec![(args[0].to_string(), value, memo)]
         } else {
@@ -707,26 +735,27 @@ impl Command for QuitCommand {
 pub fn get_commands() -> Box<HashMap<String, Box<dyn Command>>> {
     let mut map: HashMap<String, Box<dyn Command>> = HashMap::new();
 
-    map.insert("sync".to_string(),          Box::new(SyncCommand{}));
-    map.insert("syncstatus".to_string(),    Box::new(SyncStatusCommand{}));
-    map.insert("rescan".to_string(),        Box::new(RescanCommand{}));
-    map.insert("help".to_string(),          Box::new(HelpCommand{}));
-    map.insert("balance".to_string(),       Box::new(BalanceCommand{}));
-    map.insert("addresses".to_string(),     Box::new(AddressCommand{}));
-    map.insert("height".to_string(),        Box::new(HeightCommand{}));
-    map.insert("export".to_string(),        Box::new(ExportCommand{}));
-    map.insert("info".to_string(),          Box::new(InfoCommand{}));
-    map.insert("send".to_string(),          Box::new(SendCommand{}));
-    map.insert("save".to_string(),          Box::new(SaveCommand{}));
-    map.insert("quit".to_string(),          Box::new(QuitCommand{}));
-    map.insert("list".to_string(),          Box::new(TransactionsCommand{}));
-    map.insert("notes".to_string(),         Box::new(NotesCommand{}));
-    map.insert("new".to_string(),           Box::new(NewAddressCommand{}));
-    map.insert("seed".to_string(),          Box::new(SeedCommand{}));
-    map.insert("encrypt".to_string(),       Box::new(EncryptCommand{}));
-    map.insert("decrypt".to_string(),       Box::new(DecryptCommand{}));
-    map.insert("unlock".to_string(),        Box::new(UnlockCommand{}));
-    map.insert("lock".to_string(),          Box::new(LockCommand{}));
+    map.insert("sync".to_string(),              Box::new(SyncCommand{}));
+    map.insert("syncstatus".to_string(),        Box::new(SyncStatusCommand{}));
+    map.insert("encryptionstatus".to_string(),  Box::new(EncryptionStatusCommand{}));
+    map.insert("rescan".to_string(),            Box::new(RescanCommand{}));
+    map.insert("help".to_string(),              Box::new(HelpCommand{}));
+    map.insert("balance".to_string(),           Box::new(BalanceCommand{}));
+    map.insert("addresses".to_string(),         Box::new(AddressCommand{}));
+    map.insert("height".to_string(),            Box::new(HeightCommand{}));
+    map.insert("export".to_string(),            Box::new(ExportCommand{}));
+    map.insert("info".to_string(),              Box::new(InfoCommand{}));
+    map.insert("send".to_string(),              Box::new(SendCommand{}));
+    map.insert("save".to_string(),              Box::new(SaveCommand{}));
+    map.insert("quit".to_string(),              Box::new(QuitCommand{}));
+    map.insert("list".to_string(),              Box::new(TransactionsCommand{}));
+    map.insert("notes".to_string(),             Box::new(NotesCommand{}));
+    map.insert("new".to_string(),               Box::new(NewAddressCommand{}));
+    map.insert("seed".to_string(),              Box::new(SeedCommand{}));
+    map.insert("encrypt".to_string(),           Box::new(EncryptCommand{}));
+    map.insert("decrypt".to_string(),           Box::new(DecryptCommand{}));
+    map.insert("unlock".to_string(),            Box::new(UnlockCommand{}));
+    map.insert("lock".to_string(),              Box::new(LockCommand{}));
 
     Box::new(map)
 }

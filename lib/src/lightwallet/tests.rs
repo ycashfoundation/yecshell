@@ -743,8 +743,8 @@ fn test_z_spend_to_z() {
     }
 
     {
-        // The wallet should deduct this from the balance and verified balance
-        assert_eq!(wallet.zbalance(None), 0);
+        // The wallet should deduct this from the verified balance. The zbalance still includes it
+        assert_eq!(wallet.zbalance(None), AMOUNT1);
         assert_eq!(wallet.verified_zbalance(None), 0);
     }
 
@@ -763,6 +763,7 @@ fn test_z_spend_to_z() {
         // The sent tx should generate change
         assert_eq!(txs[&sent_txid].notes.len(), 1);
         assert_eq!(txs[&sent_txid].notes[0].note.value, AMOUNT1 - AMOUNT_SENT - fee);
+        assert_eq!(wallet.zbalance(None), AMOUNT1 - AMOUNT_SENT - fee);
         assert_eq!(txs[&sent_txid].notes[0].is_change, true);
         assert_eq!(txs[&sent_txid].notes[0].spent, None);
         assert_eq!(txs[&sent_txid].notes[0].unconfirmed_spent, None);
@@ -921,7 +922,6 @@ fn test_z_spend_to_taddr() {
     cb3.add_tx(&sent_tx);
     wallet.scan_block(&cb3.as_bytes()).unwrap();
 
-
     // Now this new Spent tx should be in, so the note should be marked confirmed spent
     {
         let txs = wallet.txs.read().unwrap();
@@ -948,6 +948,38 @@ fn test_z_spend_to_taddr() {
         assert_eq!(txs[&sent_txid].outgoing_metadata[0].address, taddr);
         assert_eq!(txs[&sent_txid].outgoing_metadata[0].value, AMOUNT_SENT);
         assert_eq!(txs[&sent_txid].total_shielded_value_spent, AMOUNT1);
+    }
+
+    // Create a new Tx, but this time with a memo.
+    let raw_tx = wallet.send_to_address(branch_id, &ss, &so,
+        vec![(&taddr, AMOUNT_SENT, Some("T address memo".to_string()))]).unwrap();
+    let sent_tx = Transaction::read(&raw_tx[..]).unwrap();
+    let sent_txid2 = sent_tx.txid();
+
+    // There should be a mempool Tx, but the memo should be dropped, because it was sent to a
+    // t address
+    {
+        let txs = wallet.mempool_txs.read().unwrap();
+
+        assert_eq!(txs[&sent_txid2].outgoing_metadata.len(), 1);
+        assert_eq!(txs[&sent_txid2].outgoing_metadata[0].address, taddr);
+        assert_eq!(txs[&sent_txid2].outgoing_metadata[0].value, AMOUNT_SENT);
+        assert_eq!(LightWallet::memo_str(&Some(txs[&sent_txid2].outgoing_metadata[0].memo.clone())), None);
+    }
+
+    // Now add the block
+    let mut cb4 = FakeCompactBlock::new(3, cb3.hash());
+    cb4.add_tx(&sent_tx);
+    wallet.scan_block(&cb4.as_bytes()).unwrap();
+    wallet.scan_full_tx(&sent_tx, 3, 0);
+
+    // Check Outgoing Metadata for t address, but once again there should be no memo
+    {
+        let txs = wallet.txs.read().unwrap();
+        assert_eq!(txs[&sent_txid2].outgoing_metadata.len(), 1);
+        assert_eq!(txs[&sent_txid2].outgoing_metadata[0].address, taddr);
+        assert_eq!(txs[&sent_txid2].outgoing_metadata[0].value, AMOUNT_SENT);
+        assert_eq!(LightWallet::memo_str(&Some(txs[&sent_txid2].outgoing_metadata[0].memo.clone())), None);
     }
 }
 

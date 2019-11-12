@@ -75,6 +75,13 @@ impl LightClientConfig {
     }
 
     pub fn create(server: http::Uri, dangerous: bool) -> io::Result<(LightClientConfig, u64)> {
+        use std::net::ToSocketAddrs;
+        // Test for a connection first
+        format!("{}:{}", server.host().unwrap(), server.port_part().unwrap())
+            .to_socket_addrs()?
+            .next()
+            .ok_or(std::io::Error::new(ErrorKind::ConnectionRefused, "Couldn't resolve server!"))?;
+
         // Do a getinfo first, before opening the wallet
         let info = grpcconnector::get_info(server.clone(), dangerous)
             .map_err(|e| std::io::Error::new(ErrorKind::ConnectionRefused, e))?;
@@ -114,7 +121,14 @@ impl LightClientConfig {
             };
         }
 
-        zcash_data_location.into_boxed_path()
+        // Create directory if it doesn't exist
+        match std::fs::create_dir_all(zcash_data_location.clone()) {
+            Ok(_) => zcash_data_location.into_boxed_path(),
+            Err(e) => {
+                eprintln!("Couldn't create zcash directory!\n{}", e);
+                panic!("Couldn't create zcash directory!");
+            }
+        }
     }
 
     pub fn get_wallet_path(&self) -> Box<Path> {
@@ -637,6 +651,14 @@ impl LightClient {
         }
 
         res
+    }
+
+    pub fn do_encryption_status(&self) -> JsonValue {
+        let wallet = self.wallet.read().unwrap();
+        object!{
+            "encrypted" => wallet.is_encrypted(),
+            "locked"    => !wallet.is_unlocked_for_spending()
+        }
     }
 
     pub fn do_list_transactions(&self) -> JsonValue {
