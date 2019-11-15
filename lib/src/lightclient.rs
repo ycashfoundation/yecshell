@@ -38,8 +38,8 @@ use crate::ANCHOR_OFFSET;
 mod checkpoints;
 
 pub const DEFAULT_SERVER: &str = "https://lightwalletd.ycash.xyz:443";
-pub const WALLET_NAME: &str    = "yeclite_wallet.dat";
-pub const LOGFILE_NAME: &str   = "yeclite_debug.log";
+pub const WALLET_NAME: &str    = "lite_wallet.dat";
+pub const LOGFILE_NAME: &str   = "lite_debug.log";
 
 #[derive(Clone, Debug)]
 pub struct WalletStatus {
@@ -115,7 +115,7 @@ impl LightClientConfig {
     pub fn get_log_config(&self) -> io::Result<Config> {
         let window_size = 3; // log0, log1, log2
         let fixed_window_roller =
-            FixedWindowRoller::builder().build("yeclite_debug_log{}",window_size).unwrap();
+            FixedWindowRoller::builder().build("lite_debug_log{}",window_size).unwrap();
         let size_limit = 5 * 1024 * 1024; // 5MB as max log file size to roll
         let size_trigger = SizeTrigger::new(size_limit);
         let compound_policy = CompoundPolicy::new(Box::new(size_trigger),Box::new(fixed_window_roller));
