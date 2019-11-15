@@ -28,8 +28,8 @@ use crate::ANCHOR_OFFSET;
 mod checkpoints;
 
 pub const DEFAULT_SERVER: &str = "https://lightwalletd.ycash.xyz:443";
-pub const WALLET_NAME: &str    = "yecwallet-light-wallet.dat";
-pub const LOGFILE_NAME: &str   = "yecwallet-light-wallet.debug.log";
+pub const WALLET_NAME: &str    = "yeclite_wallet.dat";
+pub const LOGFILE_NAME: &str   = "yeclite_debug.log";
 
 #[derive(Clone, Debug)]
 pub struct WalletStatus {
