@@ -38,71 +38,66 @@ cd ..
 cargo build --release 
 
 #macOS
-rm -rf target/macOS-yecwallet-cli-v$APP_VERSION
-mkdir -p target/macOS-yecwallet-cli-v$APP_VERSION
-cp target/release/yecwallet-cli target/macOS-yecwallet-cli-v$APP_VERSION/
+rm -rf target/macOS-yecshell-v$APP_VERSION
+mkdir -p target/macOS-yecshell-v$APP_VERSION
+cp target/release/yecshell target/macOS-yecshell-v$APP_VERSION/
 
 # For Windows and Linux, build via docker
 docker run --rm -v $(pwd)/:/opt/yecwallet-light-cli rustbuild:latest bash -c "cd /opt/yecwallet-light-cli && cargo build --release && cargo build --release --target armv7-unknown-linux-gnueabihf && cargo build --release --target aarch64-unknown-linux-gnu && SODIUM_LIB_DIR='/opt/libsodium-win64/lib/' cargo build --release --target x86_64-pc-windows-gnu"
 
 # Now sign and zip the binaries
 # macOS
-gpg --batch --output target/macOS-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/macOS-yecwallet-cli-v$APP_VERSION/yecwallet-cli 
 cd target
-cd macOS-yecwallet-cli-v$APP_VERSION
-gsha256sum yecwallet-cli > sha256sum.txt
+cd macOS-yecshell-v$APP_VERSION
+gsha256sum yecshell > sha256sum.txt
 cd ..
-zip -r macOS-yecwallet-cli-v$APP_VERSION.zip macOS-yecwallet-cli-v$APP_VERSION 
+zip -r macOS-yecshell-v$APP_VERSION.zip macOS-yecshell-v$APP_VERSION 
 cd ..
 
 
 #Linux
-rm -rf target/linux-yecwallet-cli-v$APP_VERSION
-mkdir -p target/linux-yecwallet-cli-v$APP_VERSION
-cp target/release/yecwallet-cli target/linux-yecwallet-cli-v$APP_VERSION/
-gpg --batch --output target/linux-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/linux-yecwallet-cli-v$APP_VERSION/yecwallet-cli
+rm -rf target/linux-yecshell-v$APP_VERSION
+mkdir -p target/linux-yecshell-v$APP_VERSION
+cp target/release/yecshell target/linux-yecshell-v$APP_VERSION/
 cd target
-cd linux-yecwallet-cli-v$APP_VERSION
-gsha256sum yecwallet-cli > sha256sum.txt
+cd linux-yecshell-v$APP_VERSION
+gsha256sum yecshell > sha256sum.txt
 cd ..
-zip -r linux-yecwallet-cli-v$APP_VERSION.zip linux-yecwallet-cli-v$APP_VERSION 
+zip -r linux-yecshell-v$APP_VERSION.zip linux-yecshell-v$APP_VERSION 
 cd ..
 
 
 #Windows
-rm -rf target/Windows-yecwallet-cli-v$APP_VERSION
-mkdir -p target/Windows-yecwallet-cli-v$APP_VERSION
-cp target/x86_64-pc-windows-gnu/release/yecwallet-cli.exe target/Windows-yecwallet-cli-v$APP_VERSION/
-gpg --batch --output target/Windows-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/Windows-yecwallet-cli-v$APP_VERSION/yecwallet-cli.exe
+rm -rf target/Windows-yecshell-v$APP_VERSION
+mkdir -p target/Windows-yecshell-v$APP_VERSION
+cp target/x86_64-pc-windows-gnu/release/yecshell.exe target/Windows-yecshell-v$APP_VERSION/
 cd target
-cd Windows-yecwallet-cli-v$APP_VERSION
-gsha256sum yecwallet-cli.exe > sha256sum.txt
+cd Windows-yecshell-v$APP_VERSION
+gsha256sum yecshell.exe > sha256sum.txt
 cd ..
-zip -r Windows-yecwallet-cli-v$APP_VERSION.zip Windows-yecwallet-cli-v$APP_VERSION 
+zip -r Windows-yecshell-v$APP_VERSION.zip Windows-yecshell-v$APP_VERSION 
 cd ..
 
 
 #Armv7
-rm -rf target/Armv7-yecwallet-cli-v$APP_VERSION
-mkdir -p target/Armv7-yecwallet-cli-v$APP_VERSION
-cp target/armv7-unknown-linux-gnueabihf/release/yecwallet-cli target/Armv7-yecwallet-cli-v$APP_VERSION/
-gpg --batch --output target/Armv7-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/Armv7-yecwallet-cli-v$APP_VERSION/yecwallet-cli
+rm -rf target/Armv7-yecshell-v$APP_VERSION
+mkdir -p target/Armv7-yecshell-v$APP_VERSION
+cp target/armv7-unknown-linux-gnueabihf/release/yecshell target/Armv7-yecshell-v$APP_VERSION/
 cd target
-cd Armv7-yecwallet-cli-v$APP_VERSION
-gsha256sum yecwallet-cli > sha256sum.txt
+cd Armv7-yecshell-v$APP_VERSION
+gsha256sum yecshell > sha256sum.txt
 cd ..
-zip -r Armv7-yecwallet-cli-v$APP_VERSION.zip Armv7-yecwallet-cli-v$APP_VERSION 
+zip -r Armv7-yecshell-v$APP_VERSION.zip Armv7-yecshell-v$APP_VERSION 
 cd ..
 
 
 #AARCH64
-rm -rf target/aarch64-yecwallet-cli-v$APP_VERSION
-mkdir -p target/aarch64-yecwallet-cli-v$APP_VERSION
-cp target/aarch64-unknown-linux-gnu/release/yecwallet-cli target/aarch64-yecwallet-cli-v$APP_VERSION/
-gpg --batch --output target/aarch64-yecwallet-cli-v$APP_VERSION/yecwallet-cli.sig --detach-sig target/aarch64-yecwallet-cli-v$APP_VERSION/yecwallet-cli
+rm -rf target/aarch64-yecshell-v$APP_VERSION
+mkdir -p target/aarch64-yecshell-v$APP_VERSION
+cp target/aarch64-unknown-linux-gnu/release/yecshell target/aarch64-yecshell-v$APP_VERSION/
 cd target
-cd aarch64-yecwallet-cli-v$APP_VERSION
-gsha256sum yecwallet-cli > sha256sum.txt
+cd aarch64-yecshell-v$APP_VERSION
+gsha256sum yecshell > sha256sum.txt
 cd ..
-zip -r aarch64-yecwallet-cli-v$APP_VERSION.zip aarch64-yecwallet-cli-v$APP_VERSION 
+zip -r aarch64-yecshell-v$APP_VERSION.zip aarch64-yecshell-v$APP_VERSION 
 cd ..
