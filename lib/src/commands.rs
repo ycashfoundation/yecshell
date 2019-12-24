@@ -464,6 +464,7 @@ impl Command for SendCommand {
         h.push("OR");
         h.push("send '[{'address': <address>, 'amount': <amount in zatoshis>, 'memo': <optional memo>}, ...]'");
         h.push("");
+        h.push("NOTE: The fee required to send this transaction (currently ZEC 0.0001) is additionally detected from your balance.");
         h.push("Example:");
         h.push("send ytestsapling1x65nq4dgp0qfywgxcwk9n0fvm4fysmapgr2q00p85ju252h6l7mmxu2jg9cqqhtvzd69jwhgv8d 200000 \"Hello from the command line\"");
         h.push("");

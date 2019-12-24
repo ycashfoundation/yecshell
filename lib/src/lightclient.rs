@@ -827,17 +827,21 @@ impl LightClient {
             return Err("Wallet is locked".to_string());
         }
 
-        let wallet = self.wallet.write().unwrap();
+        let new_address = {
+            let wallet = self.wallet.write().unwrap();
 
-        let new_address = match addr_type {
-            "z" => wallet.add_zaddr(),
-            "t" => wallet.add_taddr(),
-            _   => {
-                let e = format!("Unrecognized address type: {}", addr_type);
-                error!("{}", e);
-                return Err(e);
+            match addr_type {
+                "z" => wallet.add_zaddr(),
+                "t" => wallet.add_taddr(),
+                _   => {
+                    let e = format!("Unrecognized address type: {}", addr_type);
+                    error!("{}", e);
+                    return Err(e);
+                }
             }
         };
+
+        self.do_save()?;
 
         Ok(array![new_address])
     }
@@ -862,6 +866,8 @@ impl LightClient {
 
         // Then, do a sync, which will force a full rescan from the initial state
         let response = self.do_sync(true);
+
+        self.do_save()?;
         info!("Rescan finished");
 
         response
@@ -1155,7 +1161,11 @@ pub mod tests {
         lc.wallet.write().unwrap().unlock("password".to_string()).unwrap();
         assert!(!lc.do_export(None).is_err());
         assert!(!lc.do_seed_phrase().is_err());
+
+        // This will lock the wallet again, so after this, we'll need to unlock again
         assert!(!lc.do_new_address("t").is_err());
+        lc.wallet.write().unwrap().unlock("password".to_string()).unwrap();
+        
         assert!(!lc.do_new_address("z").is_err());
     }
 
