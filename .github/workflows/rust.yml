@@ -34,14 +34,14 @@ jobs:
         uses: actions/upload-artifact@v1
         if: contains(matrix.os, 'macos') || contains(matrix.os, 'ubuntu') 
         with:
-          name: ${{ matrix.os }}-yecwallet-cli
-          path: target/release/yecwallet-cli
+          name: ${{ matrix.os }}-yecshell
+          path: target/release/yecshell
       - name: Upload windows
         uses: actions/upload-artifact@v1
         if: contains(matrix.os, 'windows')
         with:
-          name: ${{ matrix.os }}-yecwallet-cli.exe
-          path: target/release/yecwallet-cli.exe
+          name: ${{ matrix.os }}-yecshell.exe
+          path: target/release/yecshell.exe
 
 
   linux_arm7:
@@ -62,8 +62,8 @@ jobs:
         - name: Upload
           uses: actions/upload-artifact@v1
           with:
-            name: linux_armv7-yecwallet-cli
-            path: target/armv7-unknown-linux-gnueabihf/release/yecwallet-cli
+            name: linux_armv7-yecshell
+            path: target/armv7-unknown-linux-gnueabihf/release/yecshell
 
   linux_aarch64:
       name: Linux ARM64
@@ -83,6 +83,6 @@ jobs:
         - name: Upload
           uses: actions/upload-artifact@v1
           with:
-            name: linux_aarch64-yecwallet-cli
-            path: target/aarch64-unknown-linux-gnu/release/yecwallet-cli            
+            name: linux_aarch64-yecshell
+            path: target/aarch64-unknown-linux-gnu/release/yecshell            
 
