@@ -14,7 +14,7 @@ Run `yecshell help` to see a list of all commands.
 * Also remember that t-addresses don't provide any privacy protection.
 
 ## Notes:
-* The wallet connects to the mainnet by default. To connect to testnet, please pass `--server https://lightd-test.zecwallet.co:443`
+* The wallet connects to the mainnet by default `--server https://lightwalletd.ycash.xyz:443`
 * If you want to run your own server, please see [zecwallet lightwalletd](https://github.com/adityapk00/lightwalletd), and then run `./yecshell --server http://127.0.0.1:9067`. You might also need to pass `--dangerous` if you are using a self-signed  TLS certificate.
 
 * The log file is in `~/.ycash/lite_debug.log`. Wallet is stored in `~/.ycash/lite_wallet.dat`
@@ -34,7 +34,7 @@ yecshell does automatic note and utxo management, which means it doesn't allow y
     * Run `rustup update` to get the latest version of Rust if you already have it installed
 
 ```
-git clone https://github.com/adityapk00/zecwallet-light-cli.git
+git clone https://github.com/ycashfoundation/yecwallet-light-cli.git
 cargo build --release
 ./target/release/yecshell
 ```
