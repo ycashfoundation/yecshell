@@ -402,6 +402,25 @@ impl LightClient {
         Ok(lc)
     }
 
+    pub fn read_from_buffer<R: Read>(config: &LightClientConfig, mut reader: R) -> io::Result<Self>{
+        let wallet = LightWallet::read(&mut reader, config)?;
+        let mut lc = LightClient {
+            wallet          : Arc::new(RwLock::new(wallet)),
+            config          : config.clone(),
+            sapling_output  : vec![], 
+            sapling_spend   : vec![],
+            sync_lock       : Mutex::new(()),
+            sync_status     : Arc::new(RwLock::new(WalletStatus::new())),
+        };
+
+        lc.read_sapling_params();
+
+        info!("Read wallet with birthday {}", lc.wallet.read().unwrap().get_first_tx_block());
+        info!("Created LightClient to {}", &config.server);
+
+        Ok(lc)
+    }
+
     pub fn init_logging(&self) -> io::Result<()> {
         // Configure logging first.
         let log_config = self.config.get_log_config()?;
