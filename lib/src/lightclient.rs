@@ -568,10 +568,10 @@ impl LightClient {
     }
 
     pub fn do_save(&self) -> Result<(), String> {
-        self.do_save_to(&*self.config.get_wallet_path())
+        self.do_save_to_file(&*self.config.get_wallet_path())
     }
 
-    pub fn do_save_to(&self, path: &Path) -> Result<(), String> {
+    pub fn do_save_to_file(&self, path: &Path) -> Result<(), String> {
         // If the wallet is encrypted but unlocked, lock it again.
         {
             let mut wallet = self.wallet.write().unwrap();
