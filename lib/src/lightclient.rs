@@ -567,7 +567,11 @@ impl LightClient {
         }
     }
 
-    pub fn do_save(&self) -> Result<(), String> {        
+    pub fn do_save(&self) -> Result<(), String> {
+        self.do_save_to(&*self.config.get_wallet_path())
+    }
+
+    pub fn do_save_to(&self, path: &Path) -> Result<(), String> {
         // If the wallet is encrypted but unlocked, lock it again.
         {
             let mut wallet = self.wallet.write().unwrap();
@@ -585,8 +589,8 @@ impl LightClient {
 
         let mut file_buffer = BufWriter::with_capacity(
             1_000_000, // 1 MB write buffer
-            File::create(self.config.get_wallet_path()).unwrap());
-        
+            File::create(path).unwrap());
+
         match self.wallet.write().unwrap().write(&mut file_buffer) {
             Ok(_) => Ok(()),
             Err(e) => {
