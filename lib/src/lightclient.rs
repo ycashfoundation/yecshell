@@ -601,6 +601,33 @@ impl LightClient {
         }
     }
 
+    pub fn do_save_to_buffer(&self) -> Result<Vec<u8>, String> {
+        // If the wallet is encrypted but unlocked, lock it again.
+        {
+           let mut wallet = self.wallet.write().unwrap();
+           if wallet.is_encrypted() && wallet.is_unlocked_for_spending() {
+               match wallet.lock() {
+                   Ok(_) => {},
+                   Err(e) => {
+                       let err = format!("ERR: {}", e);
+                       error!("{}", err);
+                       return Err(e.to_string());
+                   }
+               }
+           }
+       }        
+
+       let mut buffer: Vec<u8> = vec![];
+       match self.wallet.write().unwrap().write(&mut buffer) {
+           Ok(_) => Ok(buffer),
+           Err(e) => {
+               let err = format!("ERR: {}", e);
+               error!("{}", err);
+               Err(e.to_string())
+           }
+       }
+   }
+
     pub fn get_server_uri(&self) -> http::Uri {
         self.config.server.clone()
     }
