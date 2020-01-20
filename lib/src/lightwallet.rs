@@ -51,7 +51,7 @@ pub mod bugs;
 use data::{BlockData, WalletTx, Utxo, SaplingNoteData, SpendableNote, OutgoingTxMetadata};
 use extended_key::{KeyIndex, ExtendedPrivKey};
 
-pub const MAX_REORG: usize = 100;
+pub const MAX_REORG: usize = 10;
 pub const GAP_RULE_UNUSED_ADDRESSES: usize = 5;
 
 fn now() -> f64 {
