@@ -1613,19 +1613,19 @@ fn test_block_limit() {
     let prev_hash = add_blocks(&wallet, 2, 1, block_hash).unwrap();
     assert_eq!(wallet.blocks.read().unwrap().len(), 3);
     
-    let prev_hash = add_blocks(&wallet, 3, 47, prev_hash).unwrap();
-    assert_eq!(wallet.blocks.read().unwrap().len(), 50);
+    let prev_hash = add_blocks(&wallet, 3, 7, prev_hash).unwrap();
+    assert_eq!(wallet.blocks.read().unwrap().len(), 10);
     
-    let prev_hash = add_blocks(&wallet, 50, 51, prev_hash).unwrap();
-    assert_eq!(wallet.blocks.read().unwrap().len(), 101);
+    let prev_hash = add_blocks(&wallet, 10, 5, prev_hash).unwrap();
+    assert_eq!(wallet.blocks.read().unwrap().len(), 11);
     
     // Subsequent blocks should start to trim
-    let prev_hash = add_blocks(&wallet, 101, 1, prev_hash).unwrap();
-    assert_eq!(wallet.blocks.read().unwrap().len(), 101);
+    let prev_hash = add_blocks(&wallet, 15, 1, prev_hash).unwrap();
+    assert_eq!(wallet.blocks.read().unwrap().len(), 11);
 
     // Add lots
-    let _ = add_blocks(&wallet, 102, 10, prev_hash).unwrap();
-    assert_eq!(wallet.blocks.read().unwrap().len(), 101);
+    let _ = add_blocks(&wallet, 16, 10, prev_hash).unwrap();
+    assert_eq!(wallet.blocks.read().unwrap().len(), 11);
 
     // Now clear the blocks
     wallet.clear_blocks();

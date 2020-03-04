@@ -27,8 +27,6 @@ use crate::ANCHOR_OFFSET;
 mod checkpoints;
 
 pub const DEFAULT_SERVER: &str = "https://lightwalletd.ycash.xyz:443";
-pub const WALLET_NAME: &str    = "lite_wallet.dat";
-pub const LOGFILE_NAME: &str   = "lite_debug.log";
 
 #[derive(Clone, Debug)]
 pub struct WalletStatus {
@@ -989,12 +987,6 @@ pub mod tests {
         lc.wallet.write().unwrap().unlock("password".to_string()).unwrap();
         assert!(!lc.do_export(None).is_err());
         assert!(!lc.do_seed_phrase().is_err());
-
-        // This will lock the wallet again, so after this, we'll need to unlock again
-        assert!(!lc.do_new_address("t").is_err());
-        lc.wallet.write().unwrap().unlock("password".to_string()).unwrap();
-        
-        assert!(!lc.do_new_address("z").is_err());
     }
 
     #[test]
@@ -1028,15 +1020,7 @@ pub mod tests {
             // A lightclient to a new, empty directory works.
             let config = LightClientConfig::create_unconnected("test".to_string(), dir_name);
             let lc = LightClient::new(&config, 0).unwrap();
-            let seed = lc.do_seed_phrase().unwrap()["seed"].as_str().unwrap().to_string();
-        }
-
-        // Now, get a new directory, and try to read from phrase
-        {
-            let tmp = TempDir::new("lctest").unwrap();
-            let dir_name = tmp.path().to_str().map(|s| s.to_string());
-
-            let config = LightClientConfig::create_unconnected("test".to_string(), dir_name);
+            let _seed = lc.do_seed_phrase().unwrap()["seed"].as_str().unwrap().to_string();
         }
     }
 }
