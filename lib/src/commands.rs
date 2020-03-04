@@ -220,10 +220,7 @@ impl Command for BalanceCommand {
     }
 
     fn exec(&self, _args: &[&str], lightclient: &LightClient) -> String {
-        match lightclient.do_sync(true) {
-            Ok(_) => format!("{}", lightclient.do_balance().pretty(2)),
-            Err(e) => e
-        }
+        format!("{}", lightclient.do_balance().pretty(2))
     }
 }
 
@@ -551,41 +548,6 @@ impl Command for SendCommand {
     }
 }
 
-struct SaveCommand {}
-impl Command for SaveCommand {
-    fn help(&self) -> String {
-        let mut h = vec![];
-        h.push("Save the wallet to disk");
-        h.push("Usage:");
-        h.push("save");
-        h.push("");
-        h.push("The wallet is saved to disk. The wallet is periodically saved to disk (and also saved upon exit)");
-        h.push("but you can use this command to explicitly save it to disk");
-
-        h.join("\n")
-    }
-
-    fn short_help(&self) -> String {
-        "Save wallet file to disk".to_string()
-    }
-
-    fn exec(&self, _args: &[&str], lightclient: &LightClient) -> String {
-        match lightclient.do_save() {
-            Ok(_) => {
-                let r = object!{ "result" => "success" };
-                r.pretty(2)
-            },
-            Err(e) => {
-                let r = object!{ 
-                    "result" => "error",
-                    "error" => e 
-                };
-                r.pretty(2)
-            }
-        }
-    }
-}
-
 struct SeedCommand {}
 impl Command for SeedCommand {
     fn help(&self) -> String {
@@ -628,12 +590,7 @@ impl Command for TransactionsCommand {
     }
 
     fn exec(&self, _args: &[&str], lightclient: &LightClient) -> String {
-        match lightclient.do_sync(true) {
-            Ok(_) => {
-                format!("{}", lightclient.do_list_transactions().pretty(2))
-            },
-            Err(e) => e
-        }
+        format!("{}", lightclient.do_list_transactions().pretty(2))
     }
 }
 
@@ -659,14 +616,7 @@ impl Command for HeightCommand {
             return format!("Didn't understand arguments\n{}", self.help());
         }
 
-        if args.len() == 0 || (args.len() == 1 && args[0].trim() == "true") {
-            match lightclient.do_sync(true) {
-                Ok(_) => format!("{}", object! { "height" => lightclient.last_scanned_height()}.pretty(2)),
-                Err(e) => e
-            }
-        } else {
-            format!("{}", object! { "height" => lightclient.last_scanned_height()}.pretty(2))
-        }
+        format!("{}", object! { "height" => lightclient.last_scanned_height()}.pretty(2))
     }
 }
 
@@ -734,37 +684,7 @@ impl Command for NotesCommand {
             false
         };
 
-        match lightclient.do_sync(true) {
-            Ok(_) => {
-                format!("{}", lightclient.do_list_notes(all_notes).pretty(2))
-            },
-            Err(e) => e
-        }
-    }
-}
-
-
-struct QuitCommand {}
-impl Command for QuitCommand {
-    fn help(&self)  -> String {
-        let mut h = vec![];
-        h.push("Save the wallet to disk and quit");
-        h.push("Usage:");
-        h.push("quit");
-        h.push("");
-
-        h.join("\n")
-    }
-
-    fn short_help(&self) -> String {
-        "Quit the lightwallet, saving state to disk".to_string()
-    }
-
-    fn exec(&self, _args: &[&str], lightclient: &LightClient) -> String {
-        match lightclient.do_save() {
-            Ok(_) => {"".to_string()},
-            Err(e) => e
-        }
+        format!("{}", lightclient.do_list_notes(all_notes).pretty(2))
     }
 }
 
@@ -783,8 +703,6 @@ pub fn get_commands() -> Box<HashMap<String, Box<dyn Command>>> {
     map.insert("export".to_string(),            Box::new(ExportCommand{}));
     map.insert("info".to_string(),              Box::new(InfoCommand{}));
     map.insert("send".to_string(),              Box::new(SendCommand{}));
-    map.insert("save".to_string(),              Box::new(SaveCommand{}));
-    map.insert("quit".to_string(),              Box::new(QuitCommand{}));
     map.insert("list".to_string(),              Box::new(TransactionsCommand{}));
     map.insert("notes".to_string(),             Box::new(NotesCommand{}));
     map.insert("new".to_string(),               Box::new(NewAddressCommand{}));

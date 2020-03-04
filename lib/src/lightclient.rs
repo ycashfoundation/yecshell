@@ -4,12 +4,10 @@ use rand::{rngs::OsRng, seq::SliceRandom};
 
 use std::sync::{Arc, RwLock, Mutex};
 use std::sync::atomic::{AtomicU64, AtomicI32, AtomicUsize, Ordering};
-use std::path::{Path, PathBuf};
-use std::fs::File;
 use std::collections::HashMap;
 use std::io;
 use std::io::prelude::*;
-use std::io::{BufReader, BufWriter, Error, ErrorKind};
+use std::io::{ErrorKind};
 
 use protobuf::parse_from_bytes;
 
@@ -19,16 +17,7 @@ use zcash_client_backend::{
     constants::testnet, constants::mainnet, constants::regtest, encoding::encode_payment_address,
 };
 
-use log::{info, warn, error, LevelFilter};
-use log4rs::append::rolling_file::RollingFileAppender;
-use log4rs::encode::pattern::PatternEncoder;
-use log4rs::config::{Appender, Config, Root};
-use log4rs::filter::threshold::ThresholdFilter;
-use log4rs::append::rolling_file::policy::compound::{
-    CompoundPolicy,
-    trigger::size::SizeTrigger,
-    roll::fixed_window::FixedWindowRoller,
-};
+use log::{info, warn, error};
 
 use crate::grpc_client::{BlockId};
 use crate::grpcconnector::{self, *};
@@ -108,87 +97,6 @@ impl LightClientConfig {
         };
 
         Ok((config, info.block_height))
-    }
-
-
-    /// Build the Logging config
-    pub fn get_log_config(&self) -> io::Result<Config> {
-        let window_size = 3; // log0, log1, log2
-        let fixed_window_roller =
-            FixedWindowRoller::builder().build("lite_debug_log{}",window_size).unwrap();
-        let size_limit = 5 * 1024 * 1024; // 5MB as max log file size to roll
-        let size_trigger = SizeTrigger::new(size_limit);
-        let compound_policy = CompoundPolicy::new(Box::new(size_trigger),Box::new(fixed_window_roller));
-
-        Config::builder()
-            .appender(
-                Appender::builder()
-                    .filter(Box::new(ThresholdFilter::new(LevelFilter::Info)))
-                    .build(
-                        "logfile",
-                        Box::new(
-                            RollingFileAppender::builder()
-                                .encoder(Box::new(PatternEncoder::new("{d} {l}::{m}{n}")))
-                                .build(self.get_log_path(), Box::new(compound_policy))?,
-                        ),
-                    ),
-            )
-            .build(
-                Root::builder()
-                    .appender("logfile")
-                    .build(LevelFilter::Debug),
-            )
-            .map_err(|e|Error::new(ErrorKind::Other, format!("{}", e)))
-    }
-
-    pub fn get_zcash_data_path(&self) -> Box<Path> {
-        let mut zcash_data_location; 
-        if self.data_dir.is_some() {
-            zcash_data_location = PathBuf::from(&self.data_dir.as_ref().unwrap());
-        } else {
-            if cfg!(target_os="macos") || cfg!(target_os="windows") {
-                zcash_data_location = dirs::data_dir().expect("Couldn't determine app data directory!");
-                zcash_data_location.push("Ycash");
-            } else {
-                zcash_data_location = dirs::home_dir().expect("Couldn't determine home directory!");
-                zcash_data_location.push(".ycash");
-            };
-
-            match &self.chain_name[..] {
-                "main" => {},
-                "test" => zcash_data_location.push("testnet3"),
-                "regtest" => zcash_data_location.push("regtest"),
-                c         => panic!("Unknown chain {}", c),
-            };
-        }
-
-        // Create directory if it doesn't exist
-        match std::fs::create_dir_all(zcash_data_location.clone()) {
-            Ok(_) => zcash_data_location.into_boxed_path(),
-            Err(e) => {
-                eprintln!("Couldn't create zcash directory!\n{}", e);
-                panic!("Couldn't create zcash directory!");
-            }
-        }
-    }
-
-    pub fn get_wallet_path(&self) -> Box<Path> {
-        let mut wallet_location = self.get_zcash_data_path().into_path_buf();
-        wallet_location.push(WALLET_NAME);
-        
-        wallet_location.into_boxed_path()
-    }
-
-    pub fn wallet_exists(&self) -> bool {
-        return false;
-        //return self.get_wallet_path().exists()
-    }
-
-    pub fn get_log_path(&self) -> Box<Path> {
-        let mut log_path = self.get_zcash_data_path().into_path_buf();
-        log_path.push(LOGFILE_NAME);
-
-        log_path.into_boxed_path()
     }
 
     pub fn get_initial_state(&self, height: u64) -> Option<(u64, &str, &str)> {
@@ -320,14 +228,8 @@ impl LightClient {
         Ok(l)
     }
 
-    /// Create a brand new wallet with a new seed phrase. Will fail if a wallet file 
-    /// already exists on disk
+    /// Create a brand new wallet with a new seed phrase. 
     pub fn new(config: &LightClientConfig, latest_block: u64) -> io::Result<Self> {
-        if config.wallet_exists() {
-            return Err(Error::new(ErrorKind::AlreadyExists,
-                    "Cannot create a new wallet from seed, because a wallet already exists"));
-        }
-
         let mut l = LightClient {
                 wallet          : Arc::new(RwLock::new(LightWallet::new(None, config, latest_block)?)),
                 config          : config.clone(),
@@ -347,11 +249,6 @@ impl LightClient {
     }
 
     pub fn new_from_phrase(seed_phrase: String, config: &LightClientConfig, birthday: u64) -> io::Result<Self> {
-        if config.wallet_exists() {
-            return Err(Error::new(ErrorKind::AlreadyExists,
-                    "Cannot create a new wallet from seed, because a wallet already exists"));
-        }
-
         let mut l = LightClient {
                 wallet          : Arc::new(RwLock::new(LightWallet::new(Some(seed_phrase), config, birthday)?)),
                 config          : config.clone(),
@@ -369,38 +266,6 @@ impl LightClient {
         info!("Created LightClient to {}", &config.server);
 
         Ok(l)
-    }
-
-    pub fn read_from_disk(config: &LightClientConfig) -> io::Result<Self> {
-        if !config.wallet_exists() {
-            return Err(Error::new(ErrorKind::AlreadyExists,
-                    format!("Cannot read wallet. No file at {}", config.get_wallet_path().display())));
-        }
-
-        let mut file_buffer = BufReader::new(File::open(config.get_wallet_path())?);
-            
-        let wallet = LightWallet::read(&mut file_buffer, config)?;
-        let mut lc = LightClient {
-            wallet          : Arc::new(RwLock::new(wallet)),
-            config          : config.clone(),
-            sapling_output  : vec![], 
-            sapling_spend   : vec![],
-            sync_lock       : Mutex::new(()),
-            sync_status     : Arc::new(RwLock::new(WalletStatus::new())),
-        };
-
-        lc.read_sapling_params();
-
-        info!("Read wallet with birthday {}", lc.wallet.read().unwrap().get_first_tx_block());
-        info!("Created LightClient to {}", &config.server);
-
-        if crate::lightwallet::bugs::BugBip39Derivation::has_bug(&lc) {
-            let m = format!("WARNING!!!\nYour wallet has a bip39derivation bug that's showing incorrect addresses.\nPlease run 'fixbip39bug' to automatically fix the address derivation in your wallet!\nPlease see: https://github.com/adityapk00/zecwallet-light-cli/blob/master/bip39bug.md");
-             info!("{}", m);
-             println!("{}", m);
-        }
-
-        Ok(lc)
     }
 
     pub fn read_from_buffer<R: Read>(config: &LightClientConfig, mut reader: R) -> io::Result<Self>{
@@ -421,57 +286,6 @@ impl LightClient {
 
         Ok(lc)
     }
-
-    pub fn init_logging(&self) -> io::Result<()> {
-        // Configure logging first.
-        let log_config = self.config.get_log_config()?;
-        log4rs::init_config(log_config).map_err(|e| {
-            std::io::Error::new(ErrorKind::Other, e)
-        })?;
-
-        Ok(())
-    }
-
-    pub fn attempt_recover_seed(config: &LightClientConfig) -> Result<String, String> {
-        use std::io::prelude::*;
-        use byteorder::{LittleEndian, ReadBytesExt,};
-        use bip39::{Mnemonic, Language};
-        use zcash_primitives::serialize::Vector;
-
-        let mut reader = BufReader::new(File::open(config.get_wallet_path()).unwrap());
-        let version = reader.read_u64::<LittleEndian>().unwrap();
-        println!("Reading wallet version {}", version);
-
-        let encrypted = if version >= 4 {
-            reader.read_u8().unwrap() > 0
-        } else {
-            false
-        };
-
-        if encrypted {
-            return Err("The wallet is encrypted!".to_string());
-        }
-
-        let mut enc_seed = [0u8; 48];
-        if version >= 4 {
-            reader.read_exact(&mut enc_seed).unwrap();
-        }
-
-        let _nonce = if version >= 4 {
-            Vector::read(&mut reader, |r| r.read_u8()).unwrap()
-        } else {
-            vec![]
-        };
-
-        // Seed
-        let mut seed_bytes = [0u8; 32];
-        reader.read_exact(&mut seed_bytes).unwrap();
-
-        let phrase = Mnemonic::from_entropy(&seed_bytes, Language::English,).unwrap().phrase().to_string();
-
-        Ok(phrase)
-    }
-
 
     pub fn last_scanned_height(&self) -> u64 {
         self.wallet.read().unwrap().last_scanned_height() as u64
@@ -565,40 +379,6 @@ impl LightClient {
             "tbalance"           => wallet.tbalance(None),
             "z_addresses"        => z_addresses,
             "t_addresses"        => t_addresses,
-        }
-    }
-
-    pub fn do_save(&self) -> Result<(), String> {
-        self.do_save_to_file(&*self.config.get_wallet_path())
-    }
-
-    pub fn do_save_to_file(&self, path: &Path) -> Result<(), String> {
-        // If the wallet is encrypted but unlocked, lock it again.
-        {
-            let mut wallet = self.wallet.write().unwrap();
-            if wallet.is_encrypted() && wallet.is_unlocked_for_spending() {
-                match wallet.lock() {
-                    Ok(_) => {},
-                    Err(e) => {
-                        let err = format!("ERR: {}", e);
-                        error!("{}", err);
-                        return Err(e.to_string());
-                    }
-                }
-            }
-        }        
-
-        let mut file_buffer = BufWriter::with_capacity(
-            1_000_000, // 1 MB write buffer
-            File::create(path).unwrap());
-
-        match self.wallet.write().unwrap().write(&mut file_buffer) {
-            Ok(_) => Ok(()),
-            Err(e) => {
-                let err = format!("ERR: {}", e);
-                error!("{}", err);
-                Err(e.to_string())
-            }
         }
     }
 
@@ -892,8 +672,6 @@ impl LightClient {
             }
         };
 
-        self.do_save()?;
-
         Ok(array![new_address])
     }
 
@@ -918,7 +696,6 @@ impl LightClient {
         // Then, do a sync, which will force a full rescan from the initial state
         let response = self.do_sync(true);
 
-        self.do_save()?;
         info!("Rescan finished");
 
         response
@@ -1252,18 +1029,6 @@ pub mod tests {
             let config = LightClientConfig::create_unconnected("test".to_string(), dir_name);
             let lc = LightClient::new(&config, 0).unwrap();
             let seed = lc.do_seed_phrase().unwrap()["seed"].as_str().unwrap().to_string();
-            lc.do_save().unwrap();
-
-            // Doing another new will fail, because the wallet file now already exists
-            assert!(LightClient::new(&config, 0).is_err());
-
-            // new_from_phrase will not work either, again, because wallet file exists
-            assert!(LightClient::new_from_phrase(TEST_SEED.to_string(), &config, 0).is_err());
-
-            // Creating a lightclient to the same dir without a seed should re-read the same wallet
-            // file and therefore the same seed phrase
-            let lc2 = LightClient::read_from_disk(&config).unwrap();
-            assert_eq!(seed, lc2.do_seed_phrase().unwrap()["seed"].as_str().unwrap().to_string());
         }
 
         // Now, get a new directory, and try to read from phrase
@@ -1272,41 +1037,6 @@ pub mod tests {
             let dir_name = tmp.path().to_str().map(|s| s.to_string());
 
             let config = LightClientConfig::create_unconnected("test".to_string(), dir_name);
-
-            // read_from_disk will fail, because the dir doesn't exist
-            assert!(LightClient::read_from_disk(&config).is_err());
-
-            // New from phrase should work becase a file doesn't exist already
-            let lc = LightClient::new_from_phrase(TEST_SEED.to_string(), &config, 0).unwrap();
-            assert_eq!(TEST_SEED.to_string(), lc.do_seed_phrase().unwrap()["seed"].as_str().unwrap().to_string());
-            lc.do_save().unwrap();
-
-            // Now a new will fail because wallet exists
-            assert!(LightClient::new(&config, 0).is_err());
         }
     }
-
-    #[test]
-    pub fn test_recover_seed() {
-        // Create a new tmp director
-        {
-            let tmp = TempDir::new("lctest").unwrap();
-            let dir_name = tmp.path().to_str().map(|s| s.to_string());
-
-            // A lightclient to a new, empty directory works.
-            let config = LightClientConfig::create_unconnected("test".to_string(), dir_name);
-            let lc = LightClient::new(&config, 0).unwrap();
-            let seed = lc.do_seed_phrase().unwrap()["seed"].as_str().unwrap().to_string();
-            lc.do_save().unwrap();
-
-            assert_eq!(seed, LightClient::attempt_recover_seed(&config).unwrap());
-
-            // Now encrypt and save the file
-            lc.wallet.write().unwrap().encrypt("password".to_string()).unwrap();
-            lc.do_save().unwrap();
-
-            assert!(LightClient::attempt_recover_seed(&config).is_err());
-        }
-    }
-
 }

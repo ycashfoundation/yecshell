@@ -1,7 +1,6 @@
 [workspace]
 members = [
-    "lib",
-    "cli",
+    "lib"
 ]
 
 [profile.release]
