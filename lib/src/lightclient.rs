@@ -180,7 +180,8 @@ impl LightClientConfig {
     }
 
     pub fn wallet_exists(&self) -> bool {
-        return self.get_wallet_path().exists()
+        return false;
+        //return self.get_wallet_path().exists()
     }
 
     pub fn get_log_path(&self) -> Box<Path> {
