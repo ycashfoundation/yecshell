@@ -704,234 +704,45 @@ impl LightClient {
         self.sync_status.read().unwrap().clone()
     }
 
+
     pub fn do_sync(&self, print_updates: bool) -> Result<JsonValue, String> {
-        // We can only do one sync at a time because we sync blocks in serial order
-        // If we allow multiple syncs, they'll all get jumbled up.
-        let _lock = self.sync_lock.lock().unwrap();
+        // For doing the sync, we will connect to the Ysimple service, send our wallet file, wait for it to sync, 
+        // and get it back.
+        let client = reqwest::blocking::ClientBuilder::new()
+            .timeout(std::time::Duration::from_secs(60 * 2))
+            .build().unwrap();
 
-        // Sync is 3 parts
-        // 1. Get the latest block
-        // 2. Get all the blocks that we don't have
-        // 3. Find all new Txns that don't have the full Tx, and get them as full transactions 
-        //    and scan them, mainly to get the memos
-        let mut last_scanned_height = self.wallet.read().unwrap().last_scanned_height() as u64;
+        let data: Vec<u8> = match self.do_save_to_buffer() {
+            Ok(b) => b,
+            Err(e) => return Err(e)
+        };        
 
-        // This will hold the latest block fetched from the RPC
-        let latest_block_height = Arc::new(AtomicU64::new(0));
-        let lbh = latest_block_height.clone();
-        fetch_latest_block(&self.get_server_uri(), self.config.no_cert_verification, 
-            move |block: BlockId| {
-                lbh.store(block.height, Ordering::SeqCst);
-            });
-        let latest_block = latest_block_height.load(Ordering::SeqCst);
-       
+        let resp = client.post("http://main2.ycash.xyz:8000/sync")
+                    .body(data)
+                    .send();
 
-        if latest_block < last_scanned_height {
-            let w = format!("Server's latest block({}) is behind ours({})", latest_block, last_scanned_height);
-            warn!("{}", w);
-            return Err(w);
-        }
-
-        info!("Latest block is {}", latest_block);
-
-        // Get the end height to scan to.
-        let mut end_height = std::cmp::min(last_scanned_height + 1000, latest_block);
-
-        // If there's nothing to scan, just return
-        if last_scanned_height == latest_block {
-            info!("Nothing to sync, returning");
-            return Ok(object!{ "result" => "success" })
-        }
-
-        {
-            let mut status = self.sync_status.write().unwrap();
-            status.is_syncing = true;
-            status.synced_blocks = last_scanned_height;
-            status.total_blocks = latest_block;
-        }
-
-        // Count how many bytes we've downloaded
-        let bytes_downloaded = Arc::new(AtomicUsize::new(0));
-
-        let mut total_reorg = 0;
-
-        // Collect all txns in blocks that we have a tx in. We'll fetch all these
-        // txs along with our own, so that the server doesn't learn which ones
-        // belong to us.
-        let all_new_txs = Arc::new(RwLock::new(vec![]));
-
-        // Fetch CompactBlocks in increments
-        loop {
-            // Collect all block times, because we'll need to update transparent tx
-            // datetime via the block height timestamp
-            let block_times = Arc::new(RwLock::new(HashMap::new()));
-
-            let local_light_wallet = self.wallet.clone();
-            let local_bytes_downloaded = bytes_downloaded.clone();
-
-            let start_height = last_scanned_height + 1;
-            info!("Start height is {}", start_height);
-
-            // Show updates only if we're syncing a lot of blocks
-            if print_updates && (latest_block - start_height) > 100 {
-                print!("Syncing {}/{}\r", start_height, latest_block);
-                io::stdout().flush().ok().expect("Could not flush stdout");
-            }
-
-            {
-                let mut status = self.sync_status.write().unwrap();
-                status.is_syncing = true;
-                status.synced_blocks = start_height;
-                status.total_blocks = latest_block;
-            }
-
-            // Fetch compact blocks
-            info!("Fetching blocks {}-{}", start_height, end_height);
-
-            let all_txs = all_new_txs.clone();
-            let block_times_inner = block_times.clone();
-
-            let last_invalid_height = Arc::new(AtomicI32::new(0));
-            let last_invalid_height_inner = last_invalid_height.clone();
-            fetch_blocks(&self.get_server_uri(), start_height, end_height, self.config.no_cert_verification,
-                move |encoded_block: &[u8], height: u64| {
-                    // Process the block only if there were no previous errors
-                    if last_invalid_height_inner.load(Ordering::SeqCst) > 0 {
-                        return;
-                    }
-
-                    // Parse the block and save it's time. We'll use this timestamp for 
-                    // transactions in this block that might belong to us.
-                    let block: Result<zcash_client_backend::proto::compact_formats::CompactBlock, _>
-                                        = parse_from_bytes(encoded_block);
-                    match block {
-                        Ok(b) => {
-                            block_times_inner.write().unwrap().insert(b.height, b.time);
-                        },
-                        Err(_) => {}
-                    }
-
-                    match local_light_wallet.read().unwrap().scan_block(encoded_block) {
-                        Ok(block_txns) => {
-                            // Add to global tx list
-                            all_txs.write().unwrap().extend_from_slice(&block_txns.iter().map(|txid| (txid.clone(), height as i32)).collect::<Vec<_>>()[..]);
-                        },
-                        Err(invalid_height) => {
-                            // Block at this height seems to be invalid, so invalidate up till that point
-                            last_invalid_height_inner.store(invalid_height, Ordering::SeqCst);
-                        }
-                    };
-
-                    local_bytes_downloaded.fetch_add(encoded_block.len(), Ordering::SeqCst);
-            });
-
-            // Check if there was any invalid block, which means we might have to do a reorg
-            let invalid_height = last_invalid_height.load(Ordering::SeqCst);
-            if invalid_height > 0 {
-                total_reorg += self.wallet.read().unwrap().invalidate_block(invalid_height);
-
-                warn!("Invalidated block at height {}. Total reorg is now {}", invalid_height, total_reorg);
-            }
-
-            // Make sure we're not re-orging too much!
-            if total_reorg > (crate::lightwallet::MAX_REORG - 1) as u64 {
-                error!("Reorg has now exceeded {} blocks!", crate::lightwallet::MAX_REORG);
-                return Err(format!("Reorg has exceeded {} blocks. Aborting.", crate::lightwallet::MAX_REORG));
-            } 
-            
-            if invalid_height > 0 {
-                // Reset the scanning heights
-                last_scanned_height = (invalid_height - 1) as u64;
-                end_height = std::cmp::min(last_scanned_height + 1000, latest_block);
-
-                warn!("Reorg: reset scanning from {} to {}", last_scanned_height, end_height);
-
-                continue;
-            }
-
-            // If it got here, that means the blocks are scanning properly now. 
-            // So, reset the total_reorg
-            total_reorg = 0;
-
-            // We'll also fetch all the txids that our transparent addresses are involved with
-            {
-                // Copy over addresses so as to not lock up the wallet, which we'll use inside the callback below. 
-                let addresses = self.wallet.read().unwrap()
-                                    .taddresses.read().unwrap().iter().map(|a| a.clone())
-                                    .collect::<Vec<String>>();
-                for address in addresses {
-                    let wallet = self.wallet.clone();
-                    let block_times_inner = block_times.clone();
-
-                    fetch_transparent_txids(&self.get_server_uri(), address, start_height, end_height, self.config.no_cert_verification,
-                        move |tx_bytes: &[u8], height: u64| {
-                            let tx = Transaction::read(tx_bytes).unwrap();
-
-                            // Scan this Tx for transparent inputs and outputs
-                            let datetime = block_times_inner.read().unwrap().get(&height).map(|v| *v).unwrap_or(0);
-                            wallet.read().unwrap().scan_full_tx(&tx, height as i32, datetime as u64); 
-                        }
-                    );
+        let mut updated_wallet: Vec<u8> = vec![];
+        match resp {
+            Ok(mut r) => {
+                if r.status().is_success() {
+                    r.copy_to(&mut updated_wallet).unwrap();
+                } else {
+                    return Err(format!{"Response error: {:?}", r.status()});
                 }
-            }           
-            
-            // Do block height accounting
-            last_scanned_height = end_height;
-            end_height = last_scanned_height + 1000;
-
-            if last_scanned_height >= latest_block {
-                break;
-            } else if end_height > latest_block {
-                end_height = latest_block;
-            }
-        }
-
-        if print_updates{
-            println!(""); // New line to finish up the updates
-        }
-        
-        info!("Synced to {}, Downloaded {} kB", latest_block, bytes_downloaded.load(Ordering::SeqCst) / 1024);
-        {
-            let mut status = self.sync_status.write().unwrap();
-            status.is_syncing = false;
-            status.synced_blocks = latest_block;
-            status.total_blocks = latest_block;
-        }
-
-        // Get the Raw transaction for all the wallet transactions
-
-        // We need to first copy over the Txids from the wallet struct, because
-        // we need to free the read lock from here (Because we'll self.wallet.txs later)
-        let mut txids_to_fetch: Vec<(TxId, i32)> = self.wallet.read().unwrap().txs.read().unwrap().values()
-                                                        .filter(|wtx| wtx.full_tx_scanned == false)
-                                                        .map(|wtx| (wtx.txid.clone(), wtx.block))
-                                                        .collect::<Vec<(TxId, i32)>>();
-
-        info!("Fetching {} new txids, total {} with decoy", txids_to_fetch.len(), all_new_txs.read().unwrap().len());
-        txids_to_fetch.extend_from_slice(&all_new_txs.read().unwrap()[..]);
-        txids_to_fetch.sort();
-        txids_to_fetch.dedup();
-
-        let mut rng = OsRng;        
-        txids_to_fetch.shuffle(&mut rng);
-
-        // And go and fetch the txids, getting the full transaction, so we can 
-        // read the memos
-        for (txid, height) in txids_to_fetch {
-            let light_wallet_clone = self.wallet.clone();
-            info!("Fetching full Tx: {}", txid);
-
-            fetch_full_tx(&self.get_server_uri(), txid, self.config.no_cert_verification, move |tx_bytes: &[u8] | {
-                let tx = Transaction::read(tx_bytes).unwrap();
-
-                light_wallet_clone.read().unwrap().scan_full_tx(&tx, height, 0);
-            });
+            },
+            Err(e) => return Err(e.to_string())
         };
 
+        // Now, replace the wallet
+        {
+            let new_wallet = LightWallet::read(&updated_wallet[..], &self.config).unwrap();
+
+            let mut guard = self.wallet.write().unwrap();
+            std::mem::replace(&mut *guard, new_wallet);
+        }
+
         Ok(object!{
-            "result" => "success",
-            "latest_block" => latest_block,
-            "downloaded_bytes" => bytes_downloaded.load(Ordering::SeqCst)
+            "result" => "success"
         })
     }
 
