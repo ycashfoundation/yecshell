@@ -1,11 +1,8 @@
-use log::{error};
-
 use std::sync::{Arc};
 use std::net::ToSocketAddrs;
 use std::net::SocketAddr;
 
 use futures::{Future};
-use futures::stream::Stream;
 
 use tower_h2;
 use tower_util::MakeService;
@@ -17,10 +14,7 @@ use tokio_rustls::{rustls::ClientConfig, TlsConnector};
 use tokio::executor::DefaultExecutor;
 use tokio::net::tcp::TcpStream;
 
-use zcash_primitives::transaction::{TxId};
-
-use crate::grpc_client::{ChainSpec, BlockId, BlockRange, RawTransaction, 
-                         TransparentAddressBlockFilter, TxFilter, Empty, LightdInfo};
+use crate::grpc_client::{RawTransaction, Empty, LightdInfo};
 use crate::grpc_client::client::CompactTxStreamer;
 
 mod danger {
@@ -169,106 +163,6 @@ pub fn get_info(uri: http::Uri, no_cert: bool) -> Result<LightdInfo, String> {
     tokio::runtime::current_thread::Runtime::new().unwrap().block_on(runner)
 }
 
-
-pub fn fetch_blocks<F : 'static + std::marker::Send>(uri: &http::Uri, start_height: u64, end_height: u64, no_cert: bool, mut c: F)
-    where F : FnMut(&[u8], u64) {
-    let runner = make_grpc_client!(uri.scheme_str().unwrap(), uri.host().unwrap(), uri.port_part().unwrap(), no_cert)
-        .and_then(move |mut client| {
-            let bs = BlockId{ height: start_height, hash: vec!()};
-            let be = BlockId{ height: end_height,   hash: vec!()};
-
-            let br = Request::new(BlockRange{ start: Some(bs), end: Some(be)});
-            client
-                .get_block_range(br)
-                .map_err(|e| {
-                    format!("RouteChat request failed; err={:?}", e)
-                })
-                .and_then(move |response| {
-                    let inbound = response.into_inner();
-                    inbound.for_each(move |b| {
-                        use prost::Message;
-                        let mut encoded_buf = vec![];
-
-                        b.encode(&mut encoded_buf).unwrap();
-                        c(&encoded_buf, b.height);
-
-                        Ok(())
-                    })
-                    .map_err(|e| format!("gRPC inbound stream error: {:?}", e))
-                })
-        });
-
-    match tokio::runtime::current_thread::Runtime::new().unwrap().block_on(runner) {
-        Ok(_)  => {}, // The result is processed in callbacks, so nothing to do here
-        Err(e) => {
-            error!("Error while executing fetch_blocks: {}", e);
-            eprintln!("{}", e);
-        }
-    };
-}
-
-pub fn fetch_transparent_txids<F : 'static + std::marker::Send>(uri: &http::Uri, address: String, 
-    start_height: u64, end_height: u64, no_cert: bool, c: F)
-        where F : Fn(&[u8], u64) {
-    let runner = make_grpc_client!(uri.scheme_str().unwrap(), uri.host().unwrap(), uri.port_part().unwrap(), no_cert)
-        .and_then(move |mut client| {
-            let start = Some(BlockId{ height: start_height, hash: vec!()});
-            let end   = Some(BlockId{ height: end_height,   hash: vec!()});
-
-            let br = Request::new(TransparentAddressBlockFilter{ address, range: Some(BlockRange{start, end}) });
-
-            client
-                .get_address_txids(br)
-                .map_err(|e| {
-                    format!("RouteChat request failed; err={:?}", e)
-                })
-                .and_then(move |response| {
-                    let inbound = response.into_inner();
-                    inbound.for_each(move |tx| {
-                        //let tx = Transaction::read(&tx.into_inner().data[..]).unwrap();
-                        c(&tx.data, tx.height);
-
-                        Ok(())
-                    })
-                    .map_err(|e| format!("gRPC inbound stream error: {:?}", e))
-                })
-        });
-
-    match tokio::runtime::current_thread::Runtime::new().unwrap().block_on(runner) {
-        Ok(_)  => {}, // The result is processed in callbacks, so nothing to do here
-        Err(e) => {
-            error!("Error while executing fetch_transparent_txids: {}", e);
-            eprintln!("{}", e);
-        }
-    };
-}
-
-pub fn fetch_full_tx<F : 'static + std::marker::Send>(uri: &http::Uri, txid: TxId, no_cert: bool, c: F)
-        where F : Fn(&[u8]) {
-    let runner = make_grpc_client!(uri.scheme_str().unwrap(), uri.host().unwrap(), uri.port_part().unwrap(), no_cert)
-        .and_then(move |mut client| {
-            let txfilter = TxFilter { block: None, index: 0, hash: txid.0.to_vec() };
-            client.get_transaction(Request::new(txfilter))
-                    .map_err(|e| {
-                    format!("RouteChat request failed; err={:?}", e)
-                })
-                .and_then(move |response| {
-                    c(&response.into_inner().data);
-
-                    Ok(())
-                })
-                .map_err(|e| { format!("ERR = {:?}", e) })
-        });
-
-    match tokio::runtime::current_thread::Runtime::new().unwrap().block_on(runner) {
-        Ok(_)  => {}, // The result is processed in callbacks, so nothing to do here
-        Err(e) => {
-            error!("Error while executing fetch_full_tx: {}", e);
-            eprintln!("{}", e);
-        }
-    };
-}
-
 pub fn broadcast_raw_tx(uri: &http::Uri, no_cert: bool, tx_bytes: Box<[u8]>) -> Result<String, String> {
     let runner = make_grpc_client!(uri.scheme_str().unwrap(), uri.host().unwrap(), uri.port_part().unwrap(), no_cert)
         .and_then(move |mut client| {
@@ -293,26 +187,4 @@ pub fn broadcast_raw_tx(uri: &http::Uri, no_cert: bool, tx_bytes: Box<[u8]>) -> 
         });
 
     tokio::runtime::current_thread::Runtime::new().unwrap().block_on(runner)
-}
-
-pub fn fetch_latest_block<F : 'static + std::marker::Send>(uri: &http::Uri, no_cert: bool, mut c : F) 
-    where F : FnMut(BlockId) {
-    let runner = make_grpc_client!(uri.scheme_str().unwrap(), uri.host().unwrap(), uri.port_part().unwrap(), no_cert)
-        .and_then(|mut client| {
-            client.get_latest_block(Request::new(ChainSpec {}))
-            .map_err(|e| { format!("ERR = {:?}", e) })
-            .and_then(move |response| {
-                c(response.into_inner());
-                Ok(())
-            })
-            .map_err(|e| { format!("ERR = {:?}", e) })
-        });
-
-    match tokio::runtime::current_thread::Runtime::new().unwrap().block_on(runner) {
-        Ok(_)  => {}, // The result is processed in callbacks, so nothing to do here
-        Err(e) => {
-            error!("Error while executing fetch_latest_block: {}", e);
-            eprintln!("{}", e);
-        }
-    };
 }

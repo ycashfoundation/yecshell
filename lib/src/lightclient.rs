@@ -1,25 +1,18 @@
 use crate::lightwallet::LightWallet;
 
-use rand::{rngs::OsRng, seq::SliceRandom};
-
 use std::sync::{Arc, RwLock, Mutex};
-use std::sync::atomic::{AtomicU64, AtomicI32, AtomicUsize, Ordering};
-use std::collections::HashMap;
 use std::io;
 use std::io::prelude::*;
 use std::io::{ErrorKind};
 
-use protobuf::parse_from_bytes;
 
 use json::{object, array, JsonValue};
-use zcash_primitives::transaction::{TxId, Transaction};
 use zcash_client_backend::{
     constants::testnet, constants::mainnet, constants::regtest, encoding::encode_payment_address,
 };
 
 use log::{info, warn, error};
 
-use crate::grpc_client::{BlockId};
 use crate::grpcconnector::{self, *};
 use crate::SaplingParams;
 use crate::ANCHOR_OFFSET;
@@ -705,7 +698,7 @@ impl LightClient {
     }
 
 
-    pub fn do_sync(&self, print_updates: bool) -> Result<JsonValue, String> {
+    pub fn do_sync(&self, _print_updates: bool) -> Result<JsonValue, String> {
         // For doing the sync, we will connect to the Ysimple service, send our wallet file, wait for it to sync, 
         // and get it back.
         let client = reqwest::blocking::ClientBuilder::new()
