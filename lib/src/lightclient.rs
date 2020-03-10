@@ -5,6 +5,7 @@ use std::io;
 use std::io::prelude::*;
 use std::io::{ErrorKind};
 
+use rand::{Rng, rngs::OsRng};
 
 use json::{object, array, JsonValue};
 use zcash_client_backend::{
@@ -701,6 +702,15 @@ impl LightClient {
     pub fn do_sync(&self, _print_updates: bool) -> Result<JsonValue, String> {
         // For doing the sync, we will connect to the Ysimple service, send our wallet file, wait for it to sync, 
         // and get it back.
+
+        // First, we need to encrypt it first. 
+        let mut password_bytes = [0u8; 32];
+        let mut system_rng = OsRng;
+        system_rng.fill(&mut password_bytes);
+        let password = hex::encode(password_bytes);
+
+        self.wallet.write().unwrap().encrypt(password.clone()).unwrap();
+
         let client = reqwest::blocking::ClientBuilder::new()
             .timeout(std::time::Duration::from_secs(60 * 2))
             .build().unwrap();
@@ -733,6 +743,9 @@ impl LightClient {
             let mut guard = self.wallet.write().unwrap();
             std::mem::replace(&mut *guard, new_wallet);
         }
+
+        // Decrypt the wallet when it comes back
+        self.wallet.write().unwrap().remove_encryption(password).unwrap();
 
         Ok(object!{
             "result" => "success"
