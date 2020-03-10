@@ -703,6 +703,10 @@ impl LightClient {
         // For doing the sync, we will connect to the Ysimple service, send our wallet file, wait for it to sync, 
         // and get it back.
 
+        // We can only do one sync at a time because we sync blocks in serial order
+        // If we allow multiple syncs, they'll all get jumbled up.
+        let _lock = self.sync_lock.lock().unwrap();
+
         // First, we need to encrypt it first. 
         let mut password_bytes = [0u8; 32];
         let mut system_rng = OsRng;
