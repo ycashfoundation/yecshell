@@ -719,10 +719,14 @@ impl LightClient {
             .timeout(std::time::Duration::from_secs(60 * 2))
             .build().unwrap();
 
+        // Get the wallet bytes
         let data: Vec<u8> = match self.do_save_to_buffer() {
             Ok(b) => b,
             Err(e) => return Err(e)
-        };        
+        };
+
+        // Decrypt the wallet now, because if something goes wrong, we don't want to lock the wallet
+        self.wallet.write().unwrap().remove_encryption(password.clone()).unwrap();
 
         let resp = client.post("http://main2.ycash.xyz:8000/sync")
                     .body(data)
