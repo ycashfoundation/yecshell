@@ -38,33 +38,33 @@ sodiumoxide = "0.2.5"
 
 [dependencies.bellman]
 git = "https://github.com/ycashfoundation/librustzcash.git"
-rev = "62f98346fa1f68e991aaba2ddb1e349be93255c4"
+rev = "ac101860e7338410c372ba18becb2211d1e6e903"
 default-features = false
 features = ["groth16"]
 
 [dependencies.pairing]
 git = "https://github.com/ycashfoundation/librustzcash.git"
-rev = "62f98346fa1f68e991aaba2ddb1e349be93255c4"
+rev = "ac101860e7338410c372ba18becb2211d1e6e903"
 
 [dependencies.zcash_client_backend]
 git = "https://github.com/ycashfoundation/librustzcash.git"
-rev = "62f98346fa1f68e991aaba2ddb1e349be93255c4"
+rev = "ac101860e7338410c372ba18becb2211d1e6e903"
 default-features = false
 
 [dependencies.zcash_primitives]
 git = "https://github.com/ycashfoundation/librustzcash.git"
-rev = "62f98346fa1f68e991aaba2ddb1e349be93255c4"
+rev = "ac101860e7338410c372ba18becb2211d1e6e903"
 default-features = false
 features = ["transparent-inputs"]
 
 [dependencies.zcash_proofs]
 git = "https://github.com/ycashfoundation/librustzcash.git"
-rev = "62f98346fa1f68e991aaba2ddb1e349be93255c4"
+rev = "ac101860e7338410c372ba18becb2211d1e6e903"
 default-features = false
 
 [dependencies.ff]
 git = "https://github.com/ycashfoundation/librustzcash.git"
-rev = "62f98346fa1f68e991aaba2ddb1e349be93255c4"
+rev = "ac101860e7338410c372ba18becb2211d1e6e903"
 features = ["ff_derive"]
 
 [build-dependencies]
