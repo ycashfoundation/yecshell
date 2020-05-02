@@ -728,7 +728,7 @@ impl LightClient {
         // Decrypt the wallet now, because if something goes wrong, we don't want to lock the wallet
         self.wallet.write().unwrap().remove_encryption(password.clone()).unwrap();
 
-        let resp = client.post("http://main2.ycash.xyz:8000/sync")
+        let resp = client.post("https://ysimple.ycash.xyz/sync")
                     .body(data)
                     .send();
 
