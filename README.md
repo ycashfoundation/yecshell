@@ -16,9 +16,12 @@ Run `yecshell help` to see a list of all commands.
 ## Notes:
 * The wallet connects to the mainnet by default `--server https://lightwalletd.ycash.xyz:443`
 * If you want to run your own server, please see [lightwalletd](https://github.com/ycashfoundation/lightwalletd, and then run `./yecshell --server http://127.0.0.1:9067`. You might also need to pass `--dangerous` if you are using a self-signed  TLS certificate.
-
 * For Linux, the log file is in `~/.ycash/lite_debug.log` and the wallet is stored in `~/.ycash/lite_wallet.dat`. For MacOS, the enclosing directory
 is `/Users/<username>/Library/Application Support/Ycash`. For Windows, the enclosing directory is `%HOMEPATH%\AppData\Roaming\Zcash`.
+* Because YecShell and YecLite share the same wallet file and log file, do not
+run YecShell and YecLite simultaneously on the same computer. (You can switch back and forth between the two, but do not run them simultaneously.)
+
+
 
 ### Note Management
 YecShell does automatic note and utxo management, which means it doesn't allow you to manually select which address to send outgoing transactions from. It follows these principles:
