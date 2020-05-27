@@ -51,3 +51,31 @@ Here are some CLI arguments you can pass to `yecshell`. Please run `yecshell --h
 * `--seed`: Restore a wallet from a seed phrase. Note that this will fail if there is an existing wallet. Delete (or move) any existing wallet to restore from the 24-word seed phrase
     * Example: `./yecshell --seed "twenty four words seed phrase"`
  * `--recover`: Attempt to recover the seed phrase from a corrupted wallet
+
+ ## Capabilities
+
+The following commands are available from YecShell. They can be run from an interactive session or in conjuction with a call to YecShell with the format `./yecshell <command>`.
+
+- `save` - Save wallet file to disk
+- `height` - Get the latest block height that the wallet is at
+- `quit` - Quit the lightwallet, saving state to disk
+- `lock` - Lock a wallet that's been temporarily unlocked
+- `sync` - Download CompactBlocks and sync to the server
+- `export` - Export private key for wallet addresses
+- `send` - Send YEC to the given address/es
+- `help` - Lists all available commands
+- `notes` - List all sapling notes and utxos in the wallet
+- `encryptionstatus` - Check if the wallet is encrypted and if it is locked
+- `syncstatus` - Get the sync status of the wallet
+- `decrypt` - Completely remove wallet encryption
+- `balance` - Show the current YEC balance in the wallet
+- `list` - List all transactions in the wallet
+- `seed` - Display the seed phrase
+- `rescan` - Rescan the wallet, downloading and scanning all blocks and transactions
+- `addresses` - List all addresses in the wallet
+- `encrypt` - Encrypt the wallet with a password
+- `unlock` - Unlock wallet encryption for spending
+- `info` - Get the lightwalletd server's info
+- `clear` - Clear the wallet state, rolling back the wallet to an empty state.
+- `new z` or `new t` - Create a new address in this wallet
+
