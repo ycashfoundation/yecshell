@@ -715,10 +715,6 @@ impl LightClient {
 
         self.wallet.write().unwrap().encrypt(password.clone()).unwrap();
 
-        let client = reqwest::blocking::ClientBuilder::new()
-            .timeout(std::time::Duration::from_secs(60 * 2))
-            .build().unwrap();
-
         // Get the wallet bytes
         let data: Vec<u8> = match self.do_save_to_buffer() {
             Ok(b) => b,
@@ -727,6 +723,10 @@ impl LightClient {
 
         // Decrypt the wallet now, because if something goes wrong, we don't want to lock the wallet
         self.wallet.write().unwrap().remove_encryption(password.clone()).unwrap();
+
+        let client = reqwest::blocking::ClientBuilder::new()
+            .timeout(std::time::Duration::from_secs(60 * 2))
+            .build().unwrap();
 
         let resp = client.post("https://ysimple.ycash.xyz/sync")
                     .body(data)
