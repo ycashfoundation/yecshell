@@ -746,14 +746,14 @@ impl LightClient {
 
         // Now, replace the wallet
         {
-            let new_wallet = LightWallet::read(&updated_wallet[..], &self.config).unwrap();
+            let mut new_wallet = LightWallet::read(&updated_wallet[..], &self.config).unwrap();
+
+            // Decrypt the wallet when it comes back
+            new_wallet.remove_encryption(password).unwrap();
 
             let mut guard = self.wallet.write().unwrap();
             std::mem::replace(&mut *guard, new_wallet);
         }
-
-        // Decrypt the wallet when it comes back
-        self.wallet.write().unwrap().remove_encryption(password).unwrap();
 
         Ok(object!{
             "result" => "success"
